@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Lamaran Kerja Generator</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            width: 100%;
+            max-width: 900px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            flex: 1;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+        }
+
+        .preview-btn {
+            background: #0ea5e9;
+        }
+
+        .send-btn {
+            background: #22c55e;
+        }
+
+        .copy-btn {
+            background: #f59e0b;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        .preview {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow: auto;
+        }
+
+        @media (max-width: 768px) {
+
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    .btn-group {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    input, select {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .preview {
+        font-size: 13px;
+        max-height: 350px;
+    }
+}
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Email Lamaran Kerja</h1>
+
+        <div class="form-group">
+            <label>Nama HRD</label>
+            <input type="text" id="hrName" placeholder="Bapak/Ibu HRD">
+        </div>
+
+        <div class="form-group">
+            <label>Email Tujuan</label>
+            <input type="email" id="email" placeholder="hrd@perusahaan.com">
+        </div>
+
+        <div class="form-group">
+            <label>Posisi</label>
+            <select id="template">
+                <option value="frontend">
+                    Frontend Engineer
+                </option>
+                <option value="fullstack">
+                    Fullstack Developer
+                </option>
+            </select>
+        </div>
+
+        <div class="btn-group">
+            <button class="preview-btn" onclick="generateEmail()">
+                Preview
+            </button>
+
+            <button class="copy-btn" onclick="copyEmail()">
+                Copy
+            </button>
+
+            <button id="sendBtn" class="send-btn" onclick="sendEmail()">
+                Kirim
+            </button>
+        </div>
+
+        <div class="preview" id="preview">
+        </div>
+
+    </div>
+
+    <script>
+
+        // ============================
+        // EMAILJS CONFIG
+        // ============================
+
+        emailjs.init("GkBwwdu1lJiBeC6Vg");
+
+        const SERVICE_ID = "service_w6abl5p";
+        const TEMPLATE_ID = "template_wumbik5";
+
+        // ============================
+        // TEMPLATE
+        // ============================
+
+        function getTemplate(type, hrName) {
+
+            if (type === "frontend") {
+                return `Dear ${hrName},
+
+Perkenalkan, nama saya Badriana.
+
+Saya seorang Frontend Engineer dengan pengalaman lebih dari 3 tahun dalam membangun aplikasi web yang scalable, responsive, dan high-performance.
+
+PROFESSIONAL SUMMARY
+
+Frontend Engineer with 3+ years of experience building scalable and responsive web applications.
+
+TECH STACK
+
+• React.js
+• Next.js
+• Remix
+• TypeScript
+• JavaScript
+• Tailwind CSS
+• Redux Toolkit
+• Zustand
+• REST API
+
+PROJECTS
+
+• Ticketing Management System
+• Live Chat Platform
+• Reporting Dashboard
+• QA Monitoring System
+• Banking Platform
+• Insurance Platform
+• Educational Platform
+
+CV saya lampirkan sebagai bahan pertimbangan.
+
+Terima kasih atas waktu dan perhatian Bapak/Ibu.
+
+Best Regards,
+
+Badriana
+Frontend Engineer`;
+            }
+
+            return `Dear ${hrName},
+
+Perkenalkan, nama saya Badriana.
+
+Saya seorang Fullstack Developer dengan pengalaman dalam pengembangan aplikasi frontend dan backend.
+
+PROFESSIONAL SUMMARY
+
+Fullstack Developer with strong frontend expertise and hands-on experience building end-to-end web applications.
+
+FRONTEND
+
+• React.js
+• Next.js
+• Remix
+• TypeScript
+• JavaScript
+
+BACKEND
+
+• Node.js
+• Express.js
+• Golang
+• REST API
+• JWT Authentication
+
+DATABASE
+
+• PostgreSQL
+• MySQL
+
+PROJECTS
+
+• Ticketing Management System
+• Live Chat Platform
+• Reporting Dashboard
+• WhatsApp Integration
+• Banking Platform
+• Insurance Platform
+• Internal Business System
+
+CV saya lampirkan sebagai bahan pertimbangan.
+
+Saya sangat terbuka untuk berdiskusi lebih lanjut.
+
+Terima kasih atas waktu dan perhatian Bapak/Ibu.
+
+Best Regards,
+
+Badriana
+Fullstack Developer`;
+        }
+
+        // ============================
+        // PREVIEW
+        // ============================
+
+        function generateEmail() {
+
+            const hrName =
+                document.getElementById("hrName").value ||
+                "HR Team";
+
+            const type =
+                document.getElementById("template").value;
+
+            document.getElementById("preview").innerText =
+                getTemplate(type, hrName);
+        }
+
+        // ============================
+        // COPY
+        // ============================
+
+        function copyEmail() {
+
+            const text =
+                document.getElementById("preview").innerText;
+
+            navigator.clipboard.writeText(text);
+
+            alert("Email berhasil dicopy");
+        }
+
+        // ============================
+        // SEND EMAIL
+        // ============================
+
+        async function sendEmail() {
+
+            const email =
+                document.getElementById("email").value.trim();
+
+            if (!email) {
+                alert("Email tujuan wajib diisi");
+                return;
+            }
+
+            const hrName =
+                document.getElementById("hrName").value ||
+                "HR Team";
+
+            const type =
+                document.getElementById("template").value;
+
+            const subject =
+                type === "frontend"
+                    ? "Application for Frontend Engineer Position - Badriana"
+                    : "Application for Fullstack Developer Position - Badriana";
+
+            const message =
+                getTemplate(type, hrName);
+
+            const btn =
+                document.getElementById("sendBtn");
+
+            btn.disabled = true;
+            btn.innerText = "Mengirim...";
+
+            try {
+
+                const response = await emailjs.send(
+                    SERVICE_ID,
+                    TEMPLATE_ID,
+                    {
+                        to_email: email,
+                        email: email,
+                        recipient: email,
+                        subject: subject,
+                        message: message,
+                        candidate_name: "Badriana"
+                    }
+                );
+                console.log("EMAILJS RESPONSE:", response);
+                alert("Email berhasil dikirim!");
+
+            } catch (error) {
+
+                console.error(error);
+                alert(`
+                    Status : ${error.status}
+                    Pesan  : ${error.text}
+                    `);
+                alert(
+                    "Gagal mengirim email. Cek Public Key, Template ID, dan Service ID."
+                );
+
+            } finally {
+
+                btn.disabled = false;
+                btn.innerText = "Kirim";
+            }
+        }
+
+        // ============================
+        // AUTO PREVIEW
+        // ============================
+
+        document
+            .getElementById("template")
+            .addEventListener(
+                "change",
+                generateEmail
+            );
+
+        document
+            .getElementById("hrName")
+            .addEventListener(
+                "input",
+                generateEmail
+            );
+
+        generateEmail();
+
+    </script>
+
+</body>
+
+</html>
