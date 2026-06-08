@@ -8,6 +8,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
+    <script>
+        window.__ENV__ = {
+            EMAILJS_PUBLIC_KEY: "GkBwwdu1lJiBeC6Vg",
+            EMAILJS_SERVICE_ID: "service_w6abl5p",
+            EMAILJS_TEMPLATE_ID: "template_wumbik5"
+        };
+    </script>
     <style>
         * {
             margin: 0;
@@ -102,37 +109,38 @@
 
         @media (max-width: 768px) {
 
-    body {
-        padding: 10px;
-    }
+            body {
+                padding: 10px;
+            }
 
-    .container {
-        padding: 20px;
-        border-radius: 12px;
-    }
+            .container {
+                padding: 20px;
+                border-radius: 12px;
+            }
 
-    h1 {
-        font-size: 20px;
-    }
+            h1 {
+                font-size: 20px;
+            }
 
-    .btn-group {
-        flex-direction: column;
-    }
+            .btn-group {
+                flex-direction: column;
+            }
 
-    button {
-        width: 100%;
-    }
+            button {
+                width: 100%;
+            }
 
-    input, select {
-        font-size: 14px;
-        padding: 10px;
-    }
+            input,
+            select {
+                font-size: 14px;
+                padding: 10px;
+            }
 
-    .preview {
-        font-size: 13px;
-        max-height: 350px;
-    }
-}
+            .preview {
+                font-size: 13px;
+                max-height: 350px;
+            }
+        }
     </style>
 </head>
 
@@ -188,11 +196,10 @@
         // ============================
         // EMAILJS CONFIG
         // ============================
+        emailjs.init(window.__ENV__.EMAILJS_PUBLIC_KEY);
 
-        emailjs.init("GkBwwdu1lJiBeC6Vg");
-
-        const SERVICE_ID = "service_w6abl5p";
-        const TEMPLATE_ID = "template_wumbik5";
+        const SERVICE_ID = window.__ENV__.EMAILJS_SERVICE_ID;
+        const TEMPLATE_ID = window.__ENV__.EMAILJS_TEMPLATE_ID;
 
         // ============================
         // TEMPLATE
