@@ -169,6 +169,9 @@
                 <option value="fullstack">
                     Fullstack Developer
                 </option>
+                <option value="golang">
+                    Golang Developer
+                </option>
             </select>
         </div>
 
@@ -210,97 +213,158 @@
             if (type === "frontend") {
                 return `Dear ${hrName},
 
-Perkenalkan, nama saya Badriana.
+Perkenalkan, saya Badriana, seorang Frontend Developer dengan pengalaman lebih dari 2+ tahun dalam mengembangkan aplikasi web yang scalable, responsive, dan high-performance.
 
-Saya seorang Frontend Engineer dengan pengalaman lebih dari 2 tahun dalam membangun aplikasi web yang scalable, responsive, dan high-performance.
+Selama berkarier, saya telah mengembangkan berbagai aplikasi berbasis web, seperti Ticketing Management System, Live Chat Platform, Reporting Dashboard, QA Monitoring System, serta berbagai proyek di bidang perbankan, asuransi, pendidikan, dan customer service. Saya juga memiliki pengalaman membangun UI modern, melakukan integrasi REST API, mengoptimalkan performa aplikasi, serta mengimplementasikan business logic pada aplikasi berskala enterprise.
 
-PROFESSIONAL SUMMARY
-
-Frontend Engineer with 2+ years of experience building scalable and responsive web applications.
-
-TECH STACK
+Keahlian yang saya miliki meliputi:
 
 • React.js
 • Next.js
 • Remix
+• Vue.js
 • TypeScript
-• JavaScript
+• JavaScript (ES6+)
+• HTML5 & CSS3
 • Tailwind CSS
+• Bootstrap
 • Redux Toolkit
 • Zustand
-• REST API
+• Context API
+• REST API Integration
+• Node.js (Express)
+• PostgreSQL & MySQL
+• Git & GitHub
 
-PROJECTS
+Selain pengalaman profesional, saya juga aktif mengembangkan berbagai proyek pribadi dan package open source yang dipublikasikan di NPM, sebagai bentuk komitmen saya untuk terus belajar dan memberikan kontribusi bagi ekosistem JavaScript.
 
-• Ticketing Management System
-• Live Chat Platform
-• Reporting Dashboard
-• QA Monitoring System
-• Banking Platform
-• Insurance Platform
-• Educational Platform
+Saya yakin pengalaman dan kemampuan yang saya miliki dapat memberikan kontribusi positif bagi perusahaan Bapak/Ibu.
 
-CV saya lampirkan sebagai bahan pertimbangan.
+Sebagai bahan pertimbangan, saya telah melampirkan CV pada email ini. Besar harapan saya dapat diberikan kesempatan untuk mengikuti proses wawancara agar dapat menjelaskan lebih lanjut mengenai pengalaman dan kemampuan yang saya miliki.
 
-Terima kasih atas waktu dan perhatian Bapak/Ibu.
+Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untuk berdiskusi lebih lanjut.
 
-Best Regards,
+Hormat saya,
 
 Badriana
-Frontend Engineer`;
+Frontend Developer`;
             }
+            if (type === "fullstack") {
+                return `Dear ${hrName},
 
-            return `Dear ${hrName},
+          
 
-Perkenalkan, nama saya Badriana.
+Perkenalkan, saya Badriana, seorang Fullstack Developer dengan pengalaman lebih dari 2+ tahun dalam mengembangkan aplikasi web modern dari sisi frontend maupun backend. Saya memiliki keahlian yang kuat di pengembangan frontend serta pengalaman membangun REST API, mengelola database, dan mengembangkan aplikasi end-to-end.
 
-Saya seorang Fullstack Developer dengan pengalaman dalam pengembangan aplikasi frontend dan backend.
+Selama berkarier, saya telah mengembangkan berbagai sistem enterprise, seperti Ticketing Management System, Live Chat Platform, Reporting Dashboard, QA Monitoring System, serta berbagai proyek di sektor perbankan, asuransi, pendidikan, dan customer service. Saya juga terbiasa melakukan integrasi API, mengimplementasikan business logic, mengoptimalkan performa aplikasi, serta berkolaborasi dengan tim lintas divisi untuk menghasilkan solusi yang berkualitas.
 
-PROFESSIONAL SUMMARY
+Keahlian
 
-Fullstack Developer with strong frontend expertise and hands-on experience building end-to-end web applications.
-
-FRONTEND
+Frontend
 
 • React.js
 • Next.js
 • Remix
+• Vue.js
 • TypeScript
-• JavaScript
+• JavaScript (ES6+)
+• HTML5 & CSS3
+• Tailwind CSS
+• Bootstrap
+• Redux Toolkit
+• Zustand
 
-BACKEND
+Backend
 
 • Node.js
 • Express.js
-• Golang
-• REST API
+• Golang (Echo)
+• REST API Development
 • JWT Authentication
+• API Integration
 
-DATABASE
+Database
 
 • PostgreSQL
 • MySQL
 
-PROJECTS
+Tools
 
+• Git & GitHub
+• CI/CD Basics
+• Pengalaman Proyek
 • Ticketing Management System
 • Live Chat Platform
 • Reporting Dashboard
+• QA Monitoring System
 • WhatsApp Integration
 • Banking Platform
 • Insurance Platform
+• Educational Platform
 • Internal Business System
 
-CV saya lampirkan sebagai bahan pertimbangan.
+Selain pengalaman profesional, saya juga aktif mengembangkan berbagai proyek pribadi dan package open source yang telah dipublikasikan di NPM. Hal ini mencerminkan komitmen saya untuk terus belajar, mengembangkan solusi yang bermanfaat, dan mengikuti perkembangan teknologi web modern.
 
-Saya sangat terbuka untuk berdiskusi lebih lanjut.
+Sebagai bahan pertimbangan, saya telah melampirkan CV pada email ini. Besar harapan saya dapat diberikan kesempatan untuk mengikuti proses wawancara agar dapat menjelaskan lebih lanjut mengenai pengalaman dan kemampuan yang saya miliki.
 
-Terima kasih atas waktu dan perhatian Bapak/Ibu.
+Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untuk berdiskusi lebih lanjut.
 
-Best Regards,
+Hormat saya,
 
 Badriana
-Fullstack Developer`;
+Fullstack Developer`;   
+            }
+
+
+            if (type === "golang") {
+                return `Dear ${hrName}, 
+               Perkenalkan, saya Badriana, seorang Junior Golang Developer dengan pengalaman lebih dari 2+ tahun dalam pengembangan aplikasi web. Meskipun latar belakang saya lebih banyak berfokus pada frontend development, saya juga memiliki pengalaman membangun backend menggunakan Golang (Echo Framework) serta mengembangkan REST API dan mengelola database relasional melalui berbagai proyek pribadi maupun implementasi fullstack.
+
+Selama berkarier, saya telah terlibat dalam pengembangan berbagai sistem enterprise, seperti Ticketing Management System, Live Chat Platform, Reporting Dashboard, QA Monitoring System, serta berbagai proyek di sektor perbankan, asuransi, pendidikan, dan customer service. Pengalaman tersebut memberikan saya pemahaman yang baik mengenai arsitektur aplikasi, integrasi API, implementasi business logic, dan kolaborasi dengan tim lintas divisi.
+
+Keahlian yang saya miliki meliputi:
+
+Backend
+
+Golang (Echo Framework)
+Node.js (Express.js)
+REST API Development
+JWT Authentication
+JSON Processing
+API Integration
+
+Database
+
+PostgreSQL
+MySQL
+
+Frontend
+
+React.js
+Next.js
+TypeScript
+JavaScript
+
+Tools
+
+Git & GitHub
+CI/CD Basics
+
+Saya memiliki semangat belajar yang tinggi dan terus mengembangkan kemampuan backend, khususnya menggunakan Golang, melalui berbagai proyek pribadi dan implementasi fullstack. Saya siap mempelajari teknologi baru serta berkontribusi secara maksimal dalam pengembangan produk di perusahaan Bapak/Ibu.
+
+Sebagai bahan pertimbangan, saya telah melampirkan CV pada email ini. Besar harapan saya dapat diberikan kesempatan untuk mengikuti proses wawancara agar dapat menjelaskan lebih lanjut mengenai pengalaman dan kemampuan yang saya miliki.
+
+Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untuk berdiskusi lebih lanjut.
+
+Hormat saya,
+
+Badriana
+Junior Golang Developer
+               
+               `
+
+
+            }
         }
 
         // ============================
@@ -358,8 +422,9 @@ Fullstack Developer`;
             const subject =
                 type === "frontend"
                     ? "Application for Frontend Engineer Position - Badriana"
-                    : "Application for Fullstack Developer Position - Badriana";
-
+                    : type === "fullstack"
+                        ? "Application for Fullstack Developer Position - Badriana"
+                        : "Application for Junior Golang Developer Position - Badriana";
             const message =
                 getTemplate(type, hrName);
 
