@@ -64,6 +64,104 @@
             border-radius: 8px;
         }
 
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        .paste-section {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px dashed #0ea5e9;
+        }
+
+        .paste-section h2 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        .paste-hint {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .detect-btn {
+            background: #0ea5e9;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            margin-top: 10px;
+            flex: none;
+            width: auto;
+        }
+
+        .detect-btn:hover {
+            opacity: .9;
+        }
+
+        .detect-result {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            white-space: pre-line;
+        }
+
+        .detect-result.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .detect-result.warning {
+            display: block;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .result-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .result-item:hover {
+            background: #eef5ff;
+            border-color: #0ea5e9;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-item .label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 20px 0;
+        }
+
         .btn-group {
             display: flex;
             gap: 10px;
@@ -150,6 +248,16 @@
 
         <h1>Email Lamaran Kerja</h1>
 
+        <div class="paste-section">
+            <h2>Paste Postingan LinkedIn</h2>
+            <p class="paste-hint">Copy teks postingan LinkedIn (Ctrl+A, Ctrl+C), lalu paste di sini (Ctrl+V)</p>
+            <textarea id="linkedinText" rows="8" placeholder="Tempel teks postingan LinkedIn di sini..."></textarea>
+            <button class="detect-btn" onclick="detectLinkedIn()">Detect & Isi Form</button>
+            <div id="detectResult" class="detect-result"></div>
+        </div>
+
+        <hr>
+
         <div class="form-group">
             <label>Nama HRD</label>
             <input type="text" id="hrName" placeholder="Bapak/Ibu HRD">
@@ -212,6 +320,7 @@
 
             if (type === "frontend") {
                 return `Dear ${hrName},
+                
 
 Perkenalkan, saya Badriana, seorang Frontend Developer dengan pengalaman lebih dari 2+ tahun dalam mengembangkan aplikasi web yang scalable, responsive, dan high-performance.
 
@@ -399,6 +508,144 @@ Junior Golang Developer
         }
 
         // ============================
+        // DETECT LINKEDIN POST
+        // ============================
+
+        function detectAllPositions(text) {
+            const lower = text.toLowerCase();
+
+            const found = [];
+            const fs = lower.search(/\bfullstack\b|\bfull stack\b/);
+            const fe = lower.search(/\bfrontend\b|\bfront end\b/);
+            const go = lower.search(/\bgolang\b|\bgo\s*(lang|language)\b/);
+
+            if (fs >= 0) found.push({ pos: 'fullstack', idx: fs });
+            if (fe >= 0) found.push({ pos: 'frontend', idx: fe });
+            if (go >= 0) found.push({ pos: 'golang', idx: go });
+
+            if (found.length > 0) {
+                found.sort((a, b) => a.idx - b.idx);
+                return found.map(f => f.pos);
+            }
+
+            let scores = { frontend: 0, fullstack: 0, golang: 0 };
+            if (/react|vue\.?js|angular|ui engineer|ui developer/.test(lower)) scores.frontend += 2;
+            if (/html|css|javascript|typescript|tailwind/.test(lower)) scores.frontend += 1;
+            if (/node|express|database|sql|postgres|mysql/.test(lower)) {
+                scores.fullstack += 2;
+                scores.golang += 1;
+            }
+
+            if (scores.fullstack > scores.frontend && scores.fullstack > scores.golang) return ['fullstack'];
+            if (scores.golang > scores.frontend && scores.golang > scores.fullstack) return ['golang'];
+            return ['frontend'];
+        }
+
+        function detectHRName(text) {
+            const viewMatch = text.match(/View\s+(.+?)\s*[''\u2019]s\s*profile/i);
+            if (viewMatch) return viewMatch[1].trim();
+
+            const lines = text.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                if (/recruiter|hr\b|talent|hiring/i.test(lines[i])) {
+                    for (let j = i - 1; j >= 0 && j >= i - 3; j--) {
+                        const prev = lines[j].trim();
+                        if (prev && !prev.includes('\u2022') && !prev.includes('Follow') && prev.length < 50) {
+                            return prev;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            for (const line of lines) {
+                const t = line.trim();
+                if (t && /^[A-Za-z\u00C0-\u0179\s'\/.]{2,50}$/.test(t) &&
+                    !t.includes('@') && !t.includes('http') &&
+                    !/(frontend|fullstack|golang|developer|engineer|hiring|experience|requirements|responsibilities)/i.test(t) &&
+                    t.split(/\s+/).length >= 2 && t.split(/\s+/).length <= 4) {
+                    return t;
+                }
+            }
+
+            return '';
+        }
+
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function fillForm(data) {
+            document.getElementById('email').value = data.email;
+            document.getElementById('hrName').value = '';
+            document.getElementById('template').value = data.pos;
+            generateEmail();
+            document.getElementById('preview').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function detectLinkedIn() {
+
+            const text = document.getElementById('linkedinText').value.trim();
+            const result = document.getElementById('detectResult');
+
+            if (!text) {
+                result.className = 'detect-result warning';
+                result.textContent = 'Teks kosong. Paste postingan LinkedIn terlebih dahulu.';
+                return;
+            }
+
+            const emails = [...new Set(text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])];
+
+            if (emails.length === 0) {
+                result.className = 'detect-result warning';
+                result.textContent = 'Tidak ditemukan email dalam teks.';
+                return;
+            }
+
+            const hr = detectHRName(text);
+
+            const sortedEmails = emails
+                .map(email => ({ email, idx: text.indexOf(email) }))
+                .sort((a, b) => a.idx - b.idx);
+
+            const results = [];
+            sortedEmails.forEach((item, i) => {
+                const prevEnd = i > 0 ? sortedEmails[i - 1].idx + sortedEmails[i - 1].email.length : 0;
+                const context = text.substring(prevEnd, item.idx);
+                const positions = detectAllPositions(context);
+                positions.forEach(pos => results.push({ email: item.email, pos, hr }));
+            });
+
+            let html = '<div style="font-weight:bold;margin-bottom:10px;">';
+            html += 'Ditemukan ' + results.length + ' lamaran - klik untuk isi form:</div>';
+
+            results.forEach(r => {
+                const posLabel = r.pos === 'frontend' ? 'Frontend' : r.pos === 'fullstack' ? 'Fullstack' : 'Golang';
+                html += '<div class="result-item" data-email="' + escapeHtml(r.email) + '" data-pos="' + r.pos + '" data-hr="' + escapeHtml(r.hr) + '">';
+                html += '<div><span class="label">Email</span><br>' + escapeHtml(r.email) + '</div>';
+                html += '<div style="margin-top:4px"><span class="label">Posisi</span><br>' + posLabel + '</div>';
+                html += '<div style="margin-top:4px"><span class="label">HR</span><br>' + escapeHtml(r.hr || '-') + '</div>';
+                html += '</div>';
+            });
+
+            result.innerHTML = html;
+            result.className = 'detect-result success';
+            result.style.display = 'block';
+
+            result.querySelectorAll('.result-item').forEach(el => {
+                el.addEventListener('click', function() {
+                    fillForm({
+                        email: this.dataset.email,
+                        pos: this.dataset.pos,
+                        hr: this.dataset.hr
+                    });
+                });
+            });
+        }
+
+        // ============================
         // SEND EMAIL
         // ============================
 
@@ -485,6 +732,15 @@ Junior Golang Developer
             .addEventListener(
                 "input",
                 generateEmail
+            );
+
+        document
+            .getElementById("linkedinText")
+            .addEventListener(
+                "paste",
+                function() {
+                    setTimeout(detectLinkedIn, 150);
+                }
             );
 
         generateEmail();
