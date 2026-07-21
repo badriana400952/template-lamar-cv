@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Lamaran Kerja Generator</title>
-
+    
+    <!-- EmailJS Browser SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
+    
+    <!-- EmailJS configuration parameters -->
     <script>
         window.__ENV__ = {
             EMAILJS_PUBLIC_KEY: "GkBwwdu1lJiBeC6Vg",
@@ -15,738 +16,172 @@
             EMAILJS_TEMPLATE_ID: "template_wumbik5"
         };
     </script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
-        body {
-            background: #f4f6f9;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: #fff;
-            width: 100%;
-            max-width: 900px;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, .1);
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-            resize: vertical;
-        }
-
-        .paste-section {
-            background: #f0f7ff;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px dashed #0ea5e9;
-        }
-
-        .paste-section h2 {
-            font-size: 18px;
-            margin-bottom: 5px;
-            text-align: left;
-        }
-
-        .paste-hint {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .detect-btn {
-            background: #0ea5e9;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            color: white;
-            font-weight: bold;
-            margin-top: 10px;
-            flex: none;
-            width: auto;
-        }
-
-        .detect-btn:hover {
-            opacity: .9;
-        }
-
-        .detect-result {
-            margin-top: 10px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: none;
-            white-space: pre-line;
-        }
-
-        .detect-result.success {
-            display: block;
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .detect-result.warning {
-            display: block;
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .result-item {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-
-        .result-item:hover {
-            background: #eef5ff;
-            border-color: #0ea5e9;
-        }
-
-        .result-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .result-item .label {
-            font-size: 12px;
-            color: #666;
-        }
-
-        hr {
-            border: none;
-            border-top: 1px solid #ddd;
-            margin: 20px 0;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        button {
-            flex: 1;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            color: white;
-            font-weight: bold;
-        }
-
-        .preview-btn {
-            background: #0ea5e9;
-        }
-
-        .send-btn {
-            background: #22c55e;
-        }
-
-        .copy-btn {
-            background: #f59e0b;
-        }
-
-        button:hover {
-            opacity: .9;
-        }
-
-        .preview {
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            background: #fafafa;
-            white-space: pre-wrap;
-            max-height: 500px;
-            overflow: auto;
-        }
-
-        @media (max-width: 768px) {
-
-            body {
-                padding: 10px;
-            }
-
-            .container {
-                padding: 20px;
-                border-radius: 12px;
-            }
-
-            h1 {
-                font-size: 20px;
-            }
-
-            .btn-group {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
-
-            input,
-            select {
-                font-size: 14px;
-                padding: 10px;
-            }
-
-            .preview {
-                font-size: 13px;
-                max-height: 350px;
-            }
-        }
-    </style>
+    
+    <!-- Custom external stylesheet for professional SaaS look -->
+    <link rel="stylesheet" href="index.css">
+    
+    <!-- Defer custom logic implementation -->
+    <script defer src="index.js"></script>
 </head>
-
 <body>
 
-    <div class="container">
+    <main class="app-container">
+        
+        <!-- Professional Header -->
+        <header>
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                </div>
+                <div class="brand-title">
+                    <h1>MailCraft</h1>
+                    <p>Generator Lamaran Kerja Professional</p>
+                </div>
+            </div>
+        </header>
 
-        <h1>Email Lamaran Kerja</h1>
-
-        <div class="paste-section">
-            <h2>Paste Postingan LinkedIn</h2>
-            <p class="paste-hint">Copy teks postingan LinkedIn (Ctrl+A, Ctrl+C), lalu paste di sini (Ctrl+V)</p>
-            <textarea id="linkedinText" rows="8" placeholder="Tempel teks postingan LinkedIn di sini..."></textarea>
-            <button class="detect-btn" onclick="detectLinkedIn()">Detect & Isi Form</button>
-            <div id="detectResult" class="detect-result"></div>
-        </div>
-
-        <hr>
-
-        <div class="form-group">
-            <label>Nama HRD</label>
-            <input type="text" id="hrName" placeholder="Bapak/Ibu HRD">
-        </div>
-
-        <div class="form-group">
-            <label>Email Tujuan</label>
-            <input type="email" id="email" placeholder="hrd@perusahaan.com">
-        </div>
-
-        <div class="form-group">
-            <label>Posisi</label>
-            <select id="template">
-                <option value="frontend">
-                    Frontend Engineer
-                </option>
-                <option value="fullstack">
-                    Fullstack Developer
-                </option>
-                <option value="golang">
-                    Golang Developer
-                </option>
-            </select>
-        </div>
-
-        <div class="btn-group">
-            <button class="preview-btn" onclick="generateEmail()">
-                Preview
-            </button>
-
-            <button class="copy-btn" onclick="copyEmail()">
-                Copy
-            </button>
-
-            <button id="sendBtn" class="send-btn" onclick="sendEmail()">
-                Kirim
-            </button>
-        </div>
-
-        <div class="preview" id="preview">
-        </div>
-
-    </div>
-
-    <script>
-
-        // ============================
-        // EMAILJS CONFIG
-        // ============================
-        emailjs.init(window.__ENV__.EMAILJS_PUBLIC_KEY);
-
-        const SERVICE_ID = window.__ENV__.EMAILJS_SERVICE_ID;
-        const TEMPLATE_ID = window.__ENV__.EMAILJS_TEMPLATE_ID;
-
-        // ============================
-        // TEMPLATE
-        // ============================
-
-        function getTemplate(type, hrName) {
-
-            if (type === "frontend") {
-                return `Dear ${hrName},
+        <!-- Two Column Dashboard layout -->
+        <div class="main-layout">
+            
+            <!-- Left Side: Control & Configuration Fields -->
+            <section class="control-panel">
                 
-
-Perkenalkan, saya Badriana, seorang Frontend Developer dengan pengalaman lebih dari 2+ tahun dalam mengembangkan aplikasi web yang scalable, responsive, dan high-performance.
-
-Selama berkarier, saya telah mengembangkan berbagai aplikasi berbasis web, seperti Ticketing Management System, Live Chat Platform, Reporting Dashboard, QA Monitoring System, serta berbagai proyek di bidang perbankan, asuransi, pendidikan, dan customer service. Saya juga memiliki pengalaman membangun UI modern, melakukan integrasi REST API, mengoptimalkan performa aplikasi, serta mengimplementasikan business logic pada aplikasi berskala enterprise.
-
-Keahlian yang saya miliki meliputi:
-
-• React.js
-• Next.js
-• Remix
-• Vue.js
-• TypeScript
-• JavaScript (ES6+)
-• HTML5 & CSS3
-• Tailwind CSS
-• Bootstrap
-• Redux Toolkit
-• Zustand
-• Context API
-• REST API Integration
-• Node.js (Express)
-• PostgreSQL & MySQL
-• Git & GitHub
-
-Selain pengalaman profesional, saya juga aktif mengembangkan berbagai proyek pribadi dan package open source yang dipublikasikan di NPM, sebagai bentuk komitmen saya untuk terus belajar dan memberikan kontribusi bagi ekosistem JavaScript.
-
-Saya yakin pengalaman dan kemampuan yang saya miliki dapat memberikan kontribusi positif bagi perusahaan Bapak/Ibu.
-
-Sebagai bahan pertimbangan, saya telah melampirkan CV pada email ini. Besar harapan saya dapat diberikan kesempatan untuk mengikuti proses wawancara agar dapat menjelaskan lebih lanjut mengenai pengalaman dan kemampuan yang saya miliki.
-
-Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untuk berdiskusi lebih lanjut.
-
-Hormat saya,
-
-Badriana
-Frontend Developer`;
-            }
-            if (type === "fullstack") {
-                return `Dear ${hrName},
-
-          
-
-Perkenalkan, saya Badriana, seorang Fullstack Developer dengan pengalaman lebih dari 2+ tahun dalam mengembangkan aplikasi web modern dari sisi frontend maupun backend. Saya memiliki keahlian yang kuat di pengembangan frontend serta pengalaman membangun REST API, mengelola database, dan mengembangkan aplikasi end-to-end.
-
-Selama berkarier, saya telah mengembangkan berbagai sistem enterprise, seperti Ticketing Management System, Live Chat Platform, Reporting Dashboard, QA Monitoring System, serta berbagai proyek di sektor perbankan, asuransi, pendidikan, dan customer service. Saya juga terbiasa melakukan integrasi API, mengimplementasikan business logic, mengoptimalkan performa aplikasi, serta berkolaborasi dengan tim lintas divisi untuk menghasilkan solusi yang berkualitas.
-
-Keahlian
-
-Frontend
-
-• React.js
-• Next.js
-• Remix
-• Vue.js
-• TypeScript
-• JavaScript (ES6+)
-• HTML5 & CSS3
-• Tailwind CSS
-• Bootstrap
-• Redux Toolkit
-• Zustand
-
-Backend
-
-• Node.js
-• Express.js
-• Golang (Echo)
-• REST API Development
-• JWT Authentication
-• API Integration
-
-Database
-
-• PostgreSQL
-• MySQL
-
-Tools
-
-• Git & GitHub
-• CI/CD Basics
-• Pengalaman Proyek
-• Ticketing Management System
-• Live Chat Platform
-• Reporting Dashboard
-• QA Monitoring System
-• WhatsApp Integration
-• Banking Platform
-• Insurance Platform
-• Educational Platform
-• Internal Business System
-
-Selain pengalaman profesional, saya juga aktif mengembangkan berbagai proyek pribadi dan package open source yang telah dipublikasikan di NPM. Hal ini mencerminkan komitmen saya untuk terus belajar, mengembangkan solusi yang bermanfaat, dan mengikuti perkembangan teknologi web modern.
-
-Sebagai bahan pertimbangan, saya telah melampirkan CV pada email ini. Besar harapan saya dapat diberikan kesempatan untuk mengikuti proses wawancara agar dapat menjelaskan lebih lanjut mengenai pengalaman dan kemampuan yang saya miliki.
-
-Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untuk berdiskusi lebih lanjut.
-
-Hormat saya,
-
-Badriana
-Fullstack Developer`;   
-            }
-
-
-            if (type === "golang") {
-                return `Dear ${hrName}, 
-               Perkenalkan, saya Badriana, seorang Junior Golang Developer dengan pengalaman lebih dari 2+ tahun dalam pengembangan aplikasi web. Meskipun latar belakang saya lebih banyak berfokus pada frontend development, saya juga memiliki pengalaman membangun backend menggunakan Golang (Echo Framework) serta mengembangkan REST API dan mengelola database relasional melalui berbagai proyek pribadi maupun implementasi fullstack.
-
-Selama berkarier, saya telah terlibat dalam pengembangan berbagai sistem enterprise, seperti Ticketing Management System, Live Chat Platform, Reporting Dashboard, QA Monitoring System, serta berbagai proyek di sektor perbankan, asuransi, pendidikan, dan customer service. Pengalaman tersebut memberikan saya pemahaman yang baik mengenai arsitektur aplikasi, integrasi API, implementasi business logic, dan kolaborasi dengan tim lintas divisi.
-
-Keahlian yang saya miliki meliputi:
-
-Backend
-
-Golang (Echo Framework)
-Node.js (Express.js)
-REST API Development
-JWT Authentication
-JSON Processing
-API Integration
-
-Database
-
-PostgreSQL
-MySQL
-
-Frontend
-
-React.js
-Next.js
-TypeScript
-JavaScript
-
-Tools
-
-Git & GitHub
-CI/CD Basics
-
-Saya memiliki semangat belajar yang tinggi dan terus mengembangkan kemampuan backend, khususnya menggunakan Golang, melalui berbagai proyek pribadi dan implementasi fullstack. Saya siap mempelajari teknologi baru serta berkontribusi secara maksimal dalam pengembangan produk di perusahaan Bapak/Ibu.
-
-Sebagai bahan pertimbangan, saya telah melampirkan CV pada email ini. Besar harapan saya dapat diberikan kesempatan untuk mengikuti proses wawancara agar dapat menjelaskan lebih lanjut mengenai pengalaman dan kemampuan yang saya miliki.
-
-Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untuk berdiskusi lebih lanjut.
-
-Hormat saya,
-
-Badriana
-Junior Golang Developer
-               
-               `
-
-
-            }
-        }
-
-        // ============================
-        // PREVIEW
-        // ============================
-
-        function generateEmail() {
-
-            const hrName =
-                document.getElementById("hrName").value ||
-                "HR Team";
-
-            const type =
-                document.getElementById("template").value;
-
-            document.getElementById("preview").innerText =
-                getTemplate(type, hrName);
-        }
-
-        // ============================
-        // COPY
-        // ============================
-
-        function copyEmail() {
-
-            const text =
-                document.getElementById("preview").innerText;
-
-            navigator.clipboard.writeText(text);
-
-            alert("Email berhasil dicopy");
-        }
-
-        // ============================
-        // DETECT LINKEDIN POST
-        // ============================
-
-        function detectAllPositions(text) {
-            const lower = text.toLowerCase();
-
-            const found = [];
-            const fs = lower.search(/\bfullstack\b|\bfull stack\b/);
-            const fe = lower.search(/\bfrontend\b|\bfront end\b/);
-            const go = lower.search(/\bgolang\b|\bgo\s*(lang|language)\b/);
-
-            if (fs >= 0) found.push({ pos: 'fullstack', idx: fs });
-            if (fe >= 0) found.push({ pos: 'frontend', idx: fe });
-            if (go >= 0) found.push({ pos: 'golang', idx: go });
-
-            if (found.length > 0) {
-                found.sort((a, b) => a.idx - b.idx);
-                return found.map(f => f.pos);
-            }
-
-            let scores = { frontend: 0, fullstack: 0, golang: 0 };
-            if (/react|vue\.?js|angular|ui engineer|ui developer/.test(lower)) scores.frontend += 2;
-            if (/html|css|javascript|typescript|tailwind/.test(lower)) scores.frontend += 1;
-            if (/node|express|database|sql|postgres|mysql/.test(lower)) {
-                scores.fullstack += 2;
-                scores.golang += 1;
-            }
-
-            if (scores.fullstack > scores.frontend && scores.fullstack > scores.golang) return ['fullstack'];
-            if (scores.golang > scores.frontend && scores.golang > scores.fullstack) return ['golang'];
-            return ['frontend'];
-        }
-
-        function detectHRName(text) {
-            const viewMatch = text.match(/View\s+(.+?)\s*[''\u2019]s\s*profile/i);
-            if (viewMatch) return viewMatch[1].trim();
-
-            const lines = text.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-                if (/recruiter|hr\b|talent|hiring/i.test(lines[i])) {
-                    for (let j = i - 1; j >= 0 && j >= i - 3; j--) {
-                        const prev = lines[j].trim();
-                        if (prev && !prev.includes('\u2022') && !prev.includes('Follow') && prev.length < 50) {
-                            return prev;
-                        }
-                    }
-                    break;
-                }
-            }
-
-            for (const line of lines) {
-                const t = line.trim();
-                if (t && /^[A-Za-z\u00C0-\u0179\s'\/.]{2,50}$/.test(t) &&
-                    !t.includes('@') && !t.includes('http') &&
-                    !/(frontend|fullstack|golang|developer|engineer|hiring|experience|requirements|responsibilities)/i.test(t) &&
-                    t.split(/\s+/).length >= 2 && t.split(/\s+/).length <= 4) {
-                    return t;
-                }
-            }
-
-            return '';
-        }
-
-        function escapeHtml(str) {
-            const d = document.createElement('div');
-            d.textContent = str;
-            return d.innerHTML;
-        }
-
-        function fillForm(data) {
-            document.getElementById('email').value = data.email;
-            document.getElementById('hrName').value = '';
-            document.getElementById('template').value = data.pos;
-            generateEmail();
-            document.getElementById('preview').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function detectLinkedIn() {
-
-            const text = document.getElementById('linkedinText').value.trim();
-            const result = document.getElementById('detectResult');
-
-            if (!text) {
-                result.className = 'detect-result warning';
-                result.textContent = 'Teks kosong. Paste postingan LinkedIn terlebih dahulu.';
-                return;
-            }
-
-            const emails = [...new Set(text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])];
-
-            if (emails.length === 0) {
-                result.className = 'detect-result warning';
-                result.textContent = 'Tidak ditemukan email dalam teks.';
-                return;
-            }
-
-            const hr = detectHRName(text);
-
-            const sortedEmails = emails
-                .map(email => ({ email, idx: text.indexOf(email) }))
-                .sort((a, b) => a.idx - b.idx);
-
-            const results = [];
-            sortedEmails.forEach((item, i) => {
-                const prevEnd = i > 0 ? sortedEmails[i - 1].idx + sortedEmails[i - 1].email.length : 0;
-                const context = text.substring(prevEnd, item.idx);
-                const positions = detectAllPositions(context);
-                positions.forEach(pos => results.push({ email: item.email, pos, hr }));
-            });
-
-            let html = '<div style="font-weight:bold;margin-bottom:10px;">';
-            html += 'Ditemukan ' + results.length + ' lamaran - klik untuk isi form:</div>';
-
-            results.forEach(r => {
-                const posLabel = r.pos === 'frontend' ? 'Frontend' : r.pos === 'fullstack' ? 'Fullstack' : 'Golang';
-                html += '<div class="result-item" data-email="' + escapeHtml(r.email) + '" data-pos="' + r.pos + '" data-hr="' + escapeHtml(r.hr) + '">';
-                html += '<div><span class="label">Email</span><br>' + escapeHtml(r.email) + '</div>';
-                html += '<div style="margin-top:4px"><span class="label">Posisi</span><br>' + posLabel + '</div>';
-                html += '<div style="margin-top:4px"><span class="label">HR</span><br>' + escapeHtml(r.hr || '-') + '</div>';
-                html += '</div>';
-            });
-
-            result.innerHTML = html;
-            result.className = 'detect-result success';
-            result.style.display = 'block';
-
-            result.querySelectorAll('.result-item').forEach(el => {
-                el.addEventListener('click', function() {
-                    fillForm({
-                        email: this.dataset.email,
-                        pos: this.dataset.pos,
-                        hr: this.dataset.hr
-                    });
-                });
-            });
-        }
-
-        // ============================
-        // SEND EMAIL
-        // ============================
-
-        async function sendEmail() {
-
-            const email =
-                document.getElementById("email").value.trim();
-
-            if (!email) {
-                alert("Email tujuan wajib diisi");
-                return;
-            }
-
-            const hrName =
-                document.getElementById("hrName").value ||
-                "HR Team";
-
-            const type =
-                document.getElementById("template").value;
-
-            const subject =
-                type === "frontend"
-                    ? "Application for Frontend Engineer Position - Badriana"
-                    : type === "fullstack"
-                        ? "Application for Fullstack Developer Position - Badriana"
-                        : "Application for Junior Golang Developer Position - Badriana";
-            const message =
-                getTemplate(type, hrName);
-
-            const btn =
-                document.getElementById("sendBtn");
-
-            btn.disabled = true;
-            btn.innerText = "Mengirim...";
-
-            try {
-
-                const response = await emailjs.send(
-                    SERVICE_ID,
-                    TEMPLATE_ID,
-                    {
-                        to_email: email,
-                        email: email,
-                        recipient: email,
-                        subject: subject,
-                        message: message,
-                        candidate_name: "Badriana"
-                    }
-                );
-                console.log("EMAILJS RESPONSE:", response);
-                alert("Email berhasil dikirim!");
-
-            } catch (error) {
-
-                console.error(error);
-                alert(`
-                    Status : ${error.status}
-                    Pesan  : ${error.text}
-                    `);
-                alert(
-                    "Gagal mengirim email. Cek Public Key, Template ID, dan Service ID."
-                );
-
-            } finally {
-
-                btn.disabled = false;
-                btn.innerText = "Kirim";
-            }
-        }
-
-        // ============================
-        // AUTO PREVIEW
-        // ============================
-
-        document
-            .getElementById("template")
-            .addEventListener(
-                "change",
-                generateEmail
-            );
-
-        document
-            .getElementById("hrName")
-            .addEventListener(
-                "input",
-                generateEmail
-            );
-
-        document
-            .getElementById("linkedinText")
-            .addEventListener(
-                "paste",
-                function() {
-                    setTimeout(detectLinkedIn, 150);
-                }
-            );
-
-        generateEmail();
-
-    </script>
+                <!-- LinkedIn Parser card -->
+                <div class="card">
+                    <div class="card-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                            <rect x="2" y="9" width="4" height="12"></rect>
+                            <circle cx="4" cy="4" r="2"></circle>
+                        </svg>
+                        LinkedIn Post Parser
+                    </div>
+                    
+                    <div class="paste-section">
+                        <p class="paste-hint">Salin teks postingan loker dari LinkedIn, tempel di sini untuk otomatisasi form.</p>
+                        <textarea id="linkedinText" placeholder="Tempel teks postingan lowongan kerja di sini..."></textarea>
+                        
+                        <button class="btn btn-secondary btn-full" id="detectBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                <line x1="11" y1="8" x2="11" y2="14"></line>
+                                <line x1="8" y1="11" x2="14" y2="11"></line>
+                            </svg>
+                            Detect & Isi Form
+                        </button>
+                    </div>
+                    
+                    <!-- Dynamic Result Area -->
+                    <div id="detectResult" class="detect-result"></div>
+                </div>
+
+                <!-- Form Fields card -->
+                <div class="card">
+                    <div class="card-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path>
+                        </svg>
+                        Detail Penerima
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="hrName">Nama HRD / Penerima</label>
+                        <input type="text" id="hrName" placeholder="Contoh: Ibu Rina atau Bapak HRD">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Tujuan</label>
+                        <input type="email" id="email" placeholder="hrd@perusahaan.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Posisi Lamaran</label>
+                        <div class="template-grid">
+                            <div class="template-card active" data-value="frontend">
+                                <span style="font-weight: 600;">Frontend</span>
+                                <span style="font-size: 0.7rem; opacity: 0.85;">Developer</span>
+                            </div>
+                            <div class="template-card" data-value="fullstack">
+                                <span style="font-weight: 600;">Fullstack</span>
+                                <span style="font-size: 0.7rem; opacity: 0.85;">Developer</span>
+                            </div>
+                            <div class="template-card" data-value="golang">
+                                <span style="font-weight: 600;">Golang</span>
+                                <span style="font-size: 0.7rem; opacity: 0.85;">Developer</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+            
+            <!-- Right Side: Real-time Email Client mockup preview -->
+            <section class="preview-panel">
+                
+                <div class="email-mockup">
+                    
+                    <!-- Window bar controls decoration -->
+                    <div class="email-mockup-header">
+                        <div class="window-dots">
+                            <div class="dot dot-red"></div>
+                            <div class="dot dot-yellow"></div>
+                            <div class="dot dot-green"></div>
+                        </div>
+                        <span class="window-title">Pratinjau Email</span>
+                        <div style="width: 48px;"></div>
+                    </div>
+                    
+                    <!-- Address Header mockup details -->
+                    <div class="email-fields">
+                        <div class="email-field-row">
+                            <span class="email-field-label">Kepada:</span>
+                            <span class="email-field-value" id="mockupTo">(Belum ditentukan)</span>
+                        </div>
+                        <div class="email-field-row">
+                            <span class="email-field-label">Subjek:</span>
+                            <span class="email-field-value" id="mockupSubject">Application for Frontend Engineer Position - Badriana</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Scrollable Email Content Body mockup -->
+                    <div class="email-mockup-body" id="previewBody"></div>
+                    
+                </div>
+                
+                <!-- Floating action buttons panel -->
+                <div class="email-actions">
+                    <button class="btn btn-secondary" id="copyBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Salin Teks
+                    </button>
+                    
+                    <button class="btn btn-success" id="sendBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        Kirim Sekarang
+                    </button>
+                </div>
+                
+            </section>
+            
+        </div>
+        
+        <!-- Soft Footer -->
+        <footer>
+            <p>&copy; 2026 Badriana. Clean SaaS Job Application Composer.</p>
+        </footer>
+
+    </main>
 
 </body>
-
 </html>
