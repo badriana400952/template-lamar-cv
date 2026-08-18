@@ -1,14 +1,174 @@
 // ==========================================
-// EMAILJS INITIALIZATION
+// GMAIL API INTEGRATION (AUTHENTICATION & SENDER WITH ATTACHMENTS)
 // ==========================================
-if (window.__ENV__ && window.__ENV__.EMAILJS_PUBLIC_KEY) {
-    emailjs.init(window.__ENV__.EMAILJS_PUBLIC_KEY);
-} else {
-    console.error("EmailJS Public Key not found in __ENV__");
+
+const DEFAULT_WEB_CLIENT_ID = "397056968836-gi10r5ddo38dt33ld2q9f2o2797604m5.apps.googleusercontent.com";
+
+let googleTokenClient = null;
+let accessToken = localStorage.getItem("gmail_access_token") || null;
+let userEmail = localStorage.getItem("gmail_user_email") || null;
+let selectedCvFile = null;
+
+// Clear old desktop client ID if cached in browser localStorage
+if (localStorage.getItem("gmail_client_id") && localStorage.getItem("gmail_client_id").includes("6qbg2djp")) {
+    localStorage.removeItem("gmail_client_id");
+    localStorage.removeItem("gmail_access_token");
+    accessToken = null;
 }
 
-const SERVICE_ID = window.__ENV__ ? window.__ENV__.EMAILJS_SERVICE_ID : "";
-const TEMPLATE_ID = window.__ENV__ ? window.__ENV__.EMAILJS_TEMPLATE_ID : "";
+let customClientId = localStorage.getItem("gmail_client_id") || (window.__ENV__ ? window.__ENV__.GOOGLE_CLIENT_ID : "") || DEFAULT_WEB_CLIENT_ID;
+
+function initGoogleAuth(pendingAction = null) {
+    const clientId = (window.__ENV__ && window.__ENV__.GOOGLE_CLIENT_ID) ? window.__ENV__.GOOGLE_CLIENT_ID : (customClientId || DEFAULT_WEB_CLIENT_ID);
+    
+    if (!clientId) {
+        openClientModal();
+        showToast("Silakan masukkan Google OAuth Client ID terlebih dahulu.", "warning");
+        return;
+    }
+
+    if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+        googleTokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: "https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email",
+            callback: async (tokenResponse) => {
+                if (tokenResponse.access_token) {
+                    accessToken = tokenResponse.access_token;
+                    localStorage.setItem("gmail_access_token", accessToken);
+                    await fetchUserProfile();
+                    updateStatusUI();
+                    showToast("Berhasil terhubung ke akun Gmail!", "success");
+                    
+                    if (pendingAction) {
+                        pendingAction();
+                    }
+                }
+            }
+        });
+
+        googleTokenClient.requestAccessToken();
+    } else {
+        showToast("Google Identity SDK belum dimuat. Periksa koneksi internet Anda.", "error");
+    }
+}
+
+async function fetchUserProfile() {
+    if (!accessToken) return;
+    try {
+        const res = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            userEmail = data.email;
+            localStorage.setItem("gmail_user_email", userEmail);
+        }
+    } catch (e) {
+        console.error("Gagal mengambil profil user:", e);
+    }
+}
+
+function updateStatusUI() {
+    const tag = document.getElementById("gmailAccountStatus");
+    if (tag) {
+        if (accessToken && userEmail) {
+            tag.textContent = `Gmail: ${userEmail}`;
+            tag.className = "gmail-status-tag active";
+        } else {
+            tag.textContent = "Gmail API Ready";
+            tag.className = "gmail-status-tag";
+        }
+    }
+}
+
+// Base64URL encoder for RFC 2822 MIME message (Supports PDF/File Attachments)
+function createRawMimeMessage(to, subject, bodyText, attachmentObj = null) {
+    if (!attachmentObj) {
+        const message = [
+            `To: ${to}`,
+            'Content-Type: text/plain; charset="UTF-8"',
+            'MIME-Version: 1.0',
+            `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
+            '',
+            bodyText
+        ].join('\r\n');
+
+        return btoa(unescape(encodeURIComponent(message)))
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    }
+
+    const boundary = "====MailCraftBoundary_" + Date.now();
+    let mime = "";
+    mime += `To: ${to}\r\n`;
+    mime += `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=\r\n`;
+    mime += `MIME-Version: 1.0\r\n`;
+    mime += `Content-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
+
+    // Part 1: Email Text Body
+    mime += `--${boundary}\r\n`;
+    mime += `Content-Type: text/plain; charset="UTF-8"\r\n`;
+    mime += `Content-Transfer-Encoding: 8bit\r\n\r\n`;
+    mime += `${bodyText}\r\n\r\n`;
+
+    // Part 2: Attachment File
+    mime += `--${boundary}\r\n`;
+    mime += `Content-Type: ${attachmentObj.mimeType || 'application/pdf'}; name="${attachmentObj.filename}"\r\n`;
+    mime += `Content-Disposition: attachment; filename="${attachmentObj.filename}"\r\n`;
+    mime += `Content-Transfer-Encoding: base64\r\n\r\n`;
+    mime += `${attachmentObj.base64Data}\r\n\r\n`;
+
+    mime += `--${boundary}--`;
+
+    return btoa(unescape(encodeURIComponent(mime)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+async function sendEmailViaGmailApi(email, subject, message, buttonToAnimate = null) {
+    if (!accessToken) {
+        initGoogleAuth(() => sendEmailViaGmailApi(email, subject, message, buttonToAnimate));
+        return;
+    }
+
+    try {
+        const rawMessage = createRawMimeMessage(email, subject, message, selectedCvFile);
+        const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ raw: rawMessage })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log("GMAIL API SUCCESS:", data);
+            const attachmentNote = selectedCvFile ? ` (dengan lampiran CV "${selectedCvFile.filename}")` : "";
+            showToast(`Email lamaran berhasil dikirim ke ${email}${attachmentNote}!`, "success");
+            return true;
+        } else {
+            const errorData = await response.json();
+            if (response.status === 401) {
+                localStorage.removeItem("gmail_access_token");
+                accessToken = null;
+                updateStatusUI();
+                showToast("Sesi Gmail kedaluwarsa. Mengautentikasi ulang...", "warning");
+                initGoogleAuth(() => sendEmailViaGmailApi(email, subject, message, buttonToAnimate));
+            } else {
+                throw new Error(errorData.error ? errorData.error.message : "Gagal mengiriim email");
+            }
+            return false;
+        }
+    } catch (err) {
+        console.error("GMAIL API ERROR:", err);
+        showToast(`Gagal mengirim ke ${email}: ${err.message || err}`, "error");
+        throw err;
+    }
+}
 
 // ==========================================
 // TEMPLATES DATA
@@ -51,7 +211,10 @@ Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untu
 Hormat saya,
 
 Badriana
-Frontend Developer`;
+Frontend Developer 
+
+WhatsApp: 085887535612
+Portfolio: https://portfolio-badriana.vercel.app/`;
     }
     
     if (type === "fullstack") {
@@ -112,7 +275,10 @@ Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untu
 Hormat saya,
 
 Badriana
-Fullstack Developer`;
+Fullstack Developer
+
+WhatsApp: 085887535612
+Portfolio: https://portfolio-badriana.vercel.app/`;
     }
 
     if (type === "golang") {
@@ -155,7 +321,10 @@ Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untu
 Hormat saya,
 
 Badriana
-Junior Golang Developer`;
+Junior Golang Developer
+
+WhatsApp: 085887535612
+Portfolio: https://portfolio-badriana.vercel.app/`;
     }
     
     return "";
@@ -198,18 +367,9 @@ function showToast(message, type = 'success') {
     `;
     
     container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    const autoRemoveId = setTimeout(() => dismissToast(toast), 4000);
     
-    // Animate in
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 10);
-    
-    // Auto remove
-    const autoRemoveId = setTimeout(() => {
-        dismissToast(toast);
-    }, 4000);
-    
-    // Manual close button click
     toast.querySelector('.toast-close').addEventListener('click', () => {
         clearTimeout(autoRemoveId);
         dismissToast(toast);
@@ -218,9 +378,7 @@ function showToast(message, type = 'success') {
 
 function dismissToast(toast) {
     toast.classList.remove('show');
-    toast.addEventListener('transitionend', () => {
-        toast.remove();
-    });
+    toast.addEventListener('transitionend', () => toast.remove());
 }
 
 // ==========================================
@@ -231,7 +389,7 @@ let activePosition = "frontend";
 function getSubjectLine(type) {
     switch (type) {
         case "frontend":
-            return "Application for Frontend Engineer Position - Badriana";
+            return "Application for Frontend Position - Badriana";
         case "fullstack":
             return "Application for Fullstack Developer Position - Badriana";
         case "golang":
@@ -246,7 +404,6 @@ function generateEmail() {
     const hrName = hrNameInput || "HR Team";
     const emailToInput = document.getElementById("email").value.trim();
     
-    // Update live mockup fields
     document.getElementById("mockupTo").textContent = emailToInput || "(Silakan isi email tujuan)";
     document.getElementById("mockupSubject").textContent = getSubjectLine(activePosition);
     
@@ -257,7 +414,6 @@ function generateEmail() {
 function selectPosition(pos) {
     activePosition = pos;
     
-    // Update UI template cards active state
     document.querySelectorAll(".template-card").forEach(card => {
         if (card.dataset.value === pos) {
             card.classList.add("active");
@@ -277,13 +433,60 @@ function copyEmail() {
     }
     
     navigator.clipboard.writeText(text)
-        .then(() => {
-            showToast("Teks email berhasil disalin ke clipboard!", "success");
-        })
+        .then(() => showToast("Teks email berhasil disalin ke clipboard!", "success"))
         .catch(err => {
             console.error("Gagal menyalin email: ", err);
             showToast("Gagal menyalin email. Silakan coba manual.", "error");
         });
+}
+
+// ==========================================
+// CV FILE ATTACHMENT HANDLER
+// ==========================================
+function setupCvAttachment() {
+    const cvInput = document.getElementById("cvInput");
+    const cvStatus = document.getElementById("cvFileStatus");
+    const attachmentMockRow = document.getElementById("attachmentMockRow");
+    const mockupAttachmentName = document.getElementById("mockupAttachmentName");
+
+    if (!cvInput) return;
+
+    cvInput.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (!file) {
+            selectedCvFile = null;
+            if (cvStatus) cvStatus.textContent = "Pilih file CV dari komputer Anda (Otomatis terlampir di Gmail API).";
+            if (attachmentMockRow) attachmentMockRow.style.display = "none";
+            return;
+        }
+
+        // Limit file size to 10MB
+        if (file.size > 10 * 1024 * 1024) {
+            showToast("Ukuran file CV maksimal 10MB!", "warning");
+            e.target.value = "";
+            selectedCvFile = null;
+            if (attachmentMockRow) attachmentMockRow.style.display = "none";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const dataUrl = evt.target.result;
+            const base64Data = dataUrl.split(',')[1];
+            selectedCvFile = {
+                filename: file.name,
+                mimeType: file.type || "application/pdf",
+                base64Data: base64Data
+            };
+
+            if (cvStatus) cvStatus.textContent = `✓ Lampiran CV "${file.name}" siap dikirim!`;
+            if (attachmentMockRow) attachmentMockRow.style.display = "grid";
+            if (mockupAttachmentName) mockupAttachmentName.textContent = file.name;
+
+            showToast(`File CV "${file.name}" berhasil terlampir!`, "success");
+        };
+        reader.readAsDataURL(file);
+    });
 }
 
 // ==========================================
@@ -293,7 +496,6 @@ function copyEmail() {
 function classifyEmail(email, context) {
     const emailLower = email.toLowerCase();
     const contextLower = context.toLowerCase();
-    
     const parts = emailLower.split('@');
     const username = parts[0] || '';
     const domain = parts[1] || '';
@@ -301,58 +503,38 @@ function classifyEmail(email, context) {
     let recruiterScore = 0;
     let candidateScore = 0;
     
-    // 1. Domain Check
     const publicDomains = ['gmail.com', 'yahoo.com', 'ymail.com', 'outlook.com', 'hotmail.com', 'live.com', 'icloud.com', 'zoho.com', 'protonmail.com', 'proton.me', 'mail.com'];
-    const isPublicDomain = publicDomains.includes(domain);
-    if (!isPublicDomain) {
-        recruiterScore += 2; // Corporate domains are likely recruiters
-    }
+    if (!publicDomains.includes(domain)) recruiterScore += 2;
     
-    // 2. Username Check
-    const recruiterKeywords = /hr|hrd|recruitment|recruiting|recruit|career|careers|job|jobs|hiring|people|talent|info|join|apply|work|hello|loker/i;
-    if (recruiterKeywords.test(username)) {
+    if (/hr|hrd|recruitment|recruiting|recruit|career|careers|job|jobs|hiring|people|talent|info|join|apply|work|hello|loker/i.test(username)) {
         recruiterScore += 3;
     }
     
-    // 3. Context Recruiter Phrases (specifically pointing to the email)
     const recruiterPhrases = [
         'kirim cv', 'kirimkan cv', 'send cv', 'send your cv', 'email your cv', 
         'email ke', 'kirim ke', 'send to', 'apply to', 'apply at', 'recruitment at', 
         'hiring at', 'loker ke', 'hubungi hrd', 'cv to', 'resume to', 'email it to',
         'we are hiring', "we're hiring", 'job opening', 'kesempatan karir'
     ];
-    
     recruiterPhrases.forEach(phrase => {
-        if (contextLower.includes(phrase)) {
-            recruiterScore += 3;
-        }
+        if (contextLower.includes(phrase)) recruiterScore += 3;
     });
     
-    // 4. Context Candidate Phrases
     const candidatePhrases = [
         'email saya', 'my email', 'cv saya', 'my cv', 'resume saya', 'my resume', 
         'tertarik', 'interested', 'hubungi saya', 'contact me', 'nomor wa', 
         'no hp', 'mencari kerja', 'lulusan', 'fresh graduate', 'portofolio saya',
         'saya minat', 'ready to join', 'ini email', 'berikut email', 'silakan hubungi'
     ];
-    
     candidatePhrases.forEach(phrase => {
-        if (contextLower.includes(phrase)) {
-            candidateScore += 4;
-        }
+        if (contextLower.includes(phrase)) candidateScore += 4;
     });
     
-    // 5. Check if it's in a comment block / candidate post
     if (/\bopen to work\b/i.test(contextLower) || /\bcommented\b/i.test(contextLower) || /\b1st\b|\b2nd\b|\b3rd\b/i.test(contextLower)) {
         candidateScore += 2;
     }
     
-    const finalScore = recruiterScore - candidateScore;
-    
-    return {
-        isRecruiter: finalScore >= 0,
-        score: finalScore
-    };
+    return { isRecruiter: (recruiterScore - candidateScore) >= 0 };
 }
 
 function detectAllPositions(text) {
@@ -371,17 +553,6 @@ function detectAllPositions(text) {
         found.sort((a, b) => a.idx - b.idx);
         return found.map(f => f.pos);
     }
-
-    let scores = { frontend: 0, fullstack: 0, golang: 0 };
-    if (/react|vue\.?js|angular|ui engineer|ui developer/.test(lower)) scores.frontend += 2;
-    if (/html|css|javascript|typescript|tailwind/.test(lower)) scores.frontend += 1;
-    if (/node|express|database|sql|postgres|mysql/.test(lower)) {
-        scores.fullstack += 2;
-        scores.golang += 1;
-    }
-
-    if (scores.fullstack > scores.frontend && scores.fullstack > scores.golang) return ['fullstack'];
-    if (scores.golang > scores.frontend && scores.golang > scores.fullstack) return ['golang'];
     return ['frontend'];
 }
 
@@ -394,37 +565,21 @@ function detectHRName(text) {
         if (/recruiter|hr\b|talent|hiring/i.test(lines[i])) {
             for (let j = i - 1; j >= 0 && j >= i - 3; j--) {
                 const prev = lines[j].trim();
-                if (prev && !prev.includes('\u2022') && !prev.includes('Follow') && prev.length < 50) {
+                if (prev && !prev.includes('•') && !prev.includes('Follow') && prev.length < 50) {
                     return prev;
                 }
             }
             break;
         }
     }
-
-    for (const line of lines) {
-        const t = line.trim();
-        if (t && /^[A-Za-z\u00C0-\u0179\s'\/.]{2,50}$/.test(t) &&
-            !t.includes('@') && !t.includes('http') &&
-            !/(frontend|fullstack|golang|developer|engineer|hiring|experience|requirements|responsibilities)/i.test(t) &&
-            t.split(/\s+/).length >= 2 && t.split(/\s+/).length <= 4) {
-            return t;
-        }
-    }
-
     return '';
 }
 
 function fillForm(data) {
     document.getElementById('email').value = data.email;
     document.getElementById('hrName').value = data.hr || '';
-    
-    // Select position and update UI
     selectPosition(data.pos);
-    
     showToast("Form berhasil terisi secara otomatis!", "success");
-    
-    // Smooth scroll to the form panel or preview
     document.getElementById('previewBody').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -455,7 +610,6 @@ function detectLinkedIn() {
     const candidates = [];
 
     sortedEmails.forEach((item, i) => {
-        // Extract surrounding text for context analysis
         const classificationContext = text.substring(
             Math.max(0, item.idx - 150),
             Math.min(text.length, item.idx + 150)
@@ -487,7 +641,6 @@ function detectLinkedIn() {
         return;
     }
 
-    // Build modern results list using DOM elements to avoid injection vulnerability and manage click handlers safely
     resultElement.innerHTML = '';
     resultElement.className = 'detect-result success show';
 
@@ -500,7 +653,7 @@ function detectLinkedIn() {
     const listContainer = document.createElement('div');
     listContainer.className = 'result-list';
 
-    results.forEach((r, index) => {
+    results.forEach((r) => {
         const item = document.createElement('div');
         item.className = 'result-item';
         
@@ -529,11 +682,7 @@ function detectLinkedIn() {
         `;
 
         item.addEventListener('click', () => {
-            fillForm({
-                email: r.email,
-                pos: r.pos,
-                hr: r.hr
-            });
+            fillForm({ email: r.email, pos: r.pos, hr: r.hr });
         });
 
         const sendRowBtn = item.querySelector('.btn-send-row');
@@ -546,20 +695,10 @@ function detectLinkedIn() {
     });
 
     resultElement.appendChild(listContainer);
-
-    if (candidates.length > 0) {
-        const filterNote = document.createElement('div');
-        filterNote.style.fontSize = '0.75rem';
-        filterNote.style.color = 'var(--text-light)';
-        filterNote.style.marginTop = '0.75rem';
-        filterNote.style.fontStyle = 'italic';
-        filterNote.textContent = `* Sistem menyaring ${candidates.length} email milik pelamar/kandidat lain (${candidates.join(', ')}) untuk mencegah salah kirim.`;
-        resultElement.appendChild(filterNote);
-    }
 }
 
 // ==========================================
-// SEND EMAIL DIRECTLY FROM ROW
+// SEND EMAIL DIRECTLY FROM ROW (GMAIL API)
 // ==========================================
 async function sendEmailDirect(email, pos, hr, button) {
     if (!email) {
@@ -581,21 +720,7 @@ async function sendEmailDirect(email, pos, hr, button) {
     `;
 
     try {
-        const response = await emailjs.send(
-            SERVICE_ID,
-            TEMPLATE_ID,
-            {
-                to_email: email,
-                email: email,
-                recipient: email,
-                subject: subject,
-                message: message,
-                candidate_name: "Badriana"
-            }
-        );
-        console.log("EMAILJS RESPONSE:", response);
-        
-        // Success state
+        await sendEmailViaGmailApi(email, subject, message);
         button.classList.remove("sending");
         button.classList.add("success");
         button.innerHTML = `
@@ -604,18 +729,15 @@ async function sendEmailDirect(email, pos, hr, button) {
             </svg>
             <span>Terkirim</span>
         `;
-        showToast(`Email berhasil dikirim ke ${email}!`, "success");
     } catch (error) {
-        console.error(error);
         button.disabled = false;
         button.classList.remove("sending");
         button.innerHTML = originalHTML;
-        showToast(`Gagal mengirim ke ${email}: [${error.status || 'Error'}] ${error.text || 'Koneksi bermasalah'}`, "error");
     }
 }
 
 // ==========================================
-// SEND EMAIL LOGIC
+// MAIN SEND EMAIL LOGIC (GMAIL API)
 // ==========================================
 async function sendEmail() {
     const email = document.getElementById("email").value.trim();
@@ -638,34 +760,34 @@ async function sendEmail() {
         <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="animation: spin 1s linear infinite; margin-right: 0.5rem; display: inline-block;">
             <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="10"></circle>
         </svg>
-        Mengirim...
+        Mengirim via Gmail API...
     `;
 
     try {
-        const response = await emailjs.send(
-            SERVICE_ID,
-            TEMPLATE_ID,
-            {
-                to_email: email,
-                email: email,
-                recipient: email,
-                subject: subject,
-                message: message,
-                candidate_name: "Badriana"
-            }
-        );
-        console.log("EMAILJS RESPONSE:", response);
-        showToast("Email berhasil dikirim!", "success");
+        await sendEmailViaGmailApi(email, subject, message);
     } catch (error) {
         console.error(error);
-        showToast(`Gagal mengirim: [${error.status || 'Error'}] ${error.text || 'Koneksi bermasalah'}`, "error");
     } finally {
         sendBtn.disabled = false;
         sendBtn.innerHTML = originalText;
     }
 }
 
-// Add spin keyframe animation to document programmatically to avoid style pollution
+// ==========================================
+// MODAL CLIENT ID LOGIC
+// ==========================================
+function openClientModal() {
+    const modal = document.getElementById("clientModal");
+    const input = document.getElementById("clientIdInput");
+    input.value = customClientId;
+    modal.classList.add("show");
+}
+
+function closeClientModal() {
+    document.getElementById("clientModal").classList.remove("show");
+}
+
+// Add spin keyframe animation
 const style = document.createElement('style');
 style.textContent = `
     @keyframes spin {
@@ -679,27 +801,37 @@ document.head.appendChild(style);
 // EVENT LISTENERS & SETUP
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-    // Setup Position click cards listeners
     document.querySelectorAll(".template-card").forEach(card => {
         card.addEventListener("click", () => {
             selectPosition(card.dataset.value);
         });
     });
 
-    // Auto-update preview inputs listeners
     document.getElementById("hrName").addEventListener("input", generateEmail);
     document.getElementById("email").addEventListener("input", generateEmail);
 
-    // Auto-detect pasting LinkedIn post text
     document.getElementById("linkedinText").addEventListener("paste", () => {
         setTimeout(detectLinkedIn, 150);
     });
 
-    // Button click triggers
     document.getElementById("detectBtn").addEventListener("click", detectLinkedIn);
     document.getElementById("copyBtn").addEventListener("click", copyEmail);
     document.getElementById("sendBtn").addEventListener("click", sendEmail);
 
-    // Initialize first preview
+    // Setup CV File attachment reader
+    setupCvAttachment();
+
+    // Modal Events
+    document.getElementById("configBtn").addEventListener("click", openClientModal);
+    document.getElementById("closeModalBtn").addEventListener("click", closeClientModal);
+    document.getElementById("saveClientBtn").addEventListener("click", () => {
+        const val = document.getElementById("clientIdInput").value.trim();
+        customClientId = val;
+        localStorage.setItem("gmail_client_id", val);
+        closeClientModal();
+        showToast("Client ID berhasil disimpan!", "success");
+    });
+
+    updateStatusUI();
     selectPosition("frontend");
 });
