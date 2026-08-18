@@ -556,31 +556,71 @@ function detectAllPositions(text) {
     return ['frontend'];
 }
 
-function detectHRName(text) {
-    const viewMatch = text.match(/View\s+(.+?)\s*[''\u2019]s\s*profile/i);
-    if (viewMatch) return viewMatch[1].trim();
-
-    const lines = text.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-        if (/recruiter|hr\b|talent|hiring/i.test(lines[i])) {
-            for (let j = i - 1; j >= 0 && j >= i - 3; j--) {
-                const prev = lines[j].trim();
-                if (prev && !prev.includes('•') && !prev.includes('Follow') && prev.length < 50) {
-                    return prev;
-                }
-            }
-            break;
-        }
+function extractNameFromEmail(email) {
+    if (!email || !email.includes('@')) return "";
+    const username = email.split('@')[0].toLowerCase();
+    
+    // Ignore generic role usernames & recruitment bot patterns
+    const genericRoles = /^(hr|hrd|recruitment|rekrutmen|recruiter|careers?|jobs?|loker|info|admin|sales|exports?|contact|hello|support|help|team|hiring|hr_rec)/i;
+    if (genericRoles.test(username)) {
+        return "";
     }
-    return '';
+
+    // Split by dots, underscores, dashes and clean out role suffixes
+    let parts = username.split(/[._-]/)
+        .map(p => p.replace(/recruiter|hrd|hr|\d+/gi, '').trim())
+        .filter(p => p.length >= 2);
+
+    if (parts.length > 0 && parts.length <= 3) {
+        return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+    }
+
+    return "";
 }
 
-function fillForm(data) {
+function detectHRName(text, email = "") {
+    // 1. Extract individual recruiter name directly from email address (e.g. elvira.y, abdul.sidik, glenn.abednego, senja.recruiter)
+    const emailName = extractNameFromEmail(email);
+    if (emailName) {
+        return emailName;
+    }
+
+    // 2. Explicit HR / Contact patterns in post body (e.g. "Attn: Ibu Rina", "Hubungi Bpk Budi")
+    const explicitMatch = text.match(/(?:hubungi|contact|u\/p|up|attn|kepada|bpk|bapak|ibu|sdr|sdri)\.?\s+([A-Z][a-zA-Z]{1,20}(?:\s+[A-Z][a-zA-Z]{1,20}){0,2})/i);
+    if (explicitMatch) {
+        let name = explicitMatch[1].trim();
+        const prefixMatch = explicitMatch[0].match(/bapak|bpk|ibu|sdr|sdri/i);
+        const prefix = prefixMatch ? prefixMatch[0] + " " : "";
+        if (!/(frontend|backend|fullstack|developer|engineer|hiring|job|loker)/i.test(name)) {
+            return (prefix + name).trim();
+        }
+    }
+
+    const hrPrefixMatch = text.match(/(?:hrd|hr|recruiter|talent acquisition)\s*[:\-]\s*([A-Z][a-zA-Z]{1,20}(?:\s+[A-Z][a-zA-Z]{1,20}){0,2})/i);
+    if (hrPrefixMatch) {
+        let name = hrPrefixMatch[1].trim();
+        if (!/(frontend|backend|fullstack|developer|engineer|hiring|job|loker)/i.test(name)) {
+            return name;
+        }
+    }
+
+    // 3. Default clean fallback for company emails: Tim HRD (Sopan & Aman)
+    return "Tim HRD";
+}
+
+function fillForm(data, itemEl = null) {
     document.getElementById('email').value = data.email;
-    document.getElementById('hrName').value = data.hr || '';
+    document.getElementById('hrName').value = data.hr || 'Tim HRD';
     selectPosition(data.pos);
-    showToast("Form berhasil terisi secara otomatis!", "success");
-    document.getElementById('previewBody').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    generateEmail();
+
+    // Highlight active result item
+    document.querySelectorAll('.result-item').forEach(el => el.classList.remove('active'));
+    if (itemEl) {
+        itemEl.classList.add('active');
+    }
+
+    showToast(`Form diisi dengan target email: ${data.email}`, "success");
 }
 
 function detectLinkedIn() {
@@ -601,7 +641,6 @@ function detectLinkedIn() {
         return;
     }
 
-    const hr = detectHRName(text);
     const sortedEmails = emails
         .map(email => ({ email, idx: text.indexOf(email) }))
         .sort((a, b) => a.idx - b.idx);
@@ -615,6 +654,7 @@ function detectLinkedIn() {
             Math.min(text.length, item.idx + 150)
         );
         const classification = classifyEmail(item.email, classificationContext);
+        const hr = detectHRName(text, item.email);
         
         if (classification.isRecruiter) {
             const prevEnd = i > 0 ? sortedEmails[i - 1].idx + sortedEmails[i - 1].email.length : 0;
@@ -653,9 +693,9 @@ function detectLinkedIn() {
     const listContainer = document.createElement('div');
     listContainer.className = 'result-list';
 
-    results.forEach((r) => {
+    results.forEach((r, idx) => {
         const item = document.createElement('div');
-        item.className = 'result-item';
+        item.className = 'result-item' + (idx === 0 ? ' active' : '');
         
         const posLabel = r.pos === 'frontend' ? 'Frontend' : r.pos === 'fullstack' ? 'Fullstack' : 'Golang';
         const initial = r.hr ? r.hr.charAt(0).toUpperCase() : 'HR';
@@ -682,12 +722,13 @@ function detectLinkedIn() {
         `;
 
         item.addEventListener('click', () => {
-            fillForm({ email: r.email, pos: r.pos, hr: r.hr });
+            fillForm({ email: r.email, pos: r.pos, hr: r.hr }, item);
         });
 
         const sendRowBtn = item.querySelector('.btn-send-row');
         sendRowBtn.addEventListener('click', (event) => {
             event.stopPropagation();
+            fillForm({ email: r.email, pos: r.pos, hr: r.hr }, item);
             sendEmailDirect(r.email, r.pos, r.hr, sendRowBtn);
         });
 
@@ -695,6 +736,11 @@ function detectLinkedIn() {
     });
 
     resultElement.appendChild(listContainer);
+
+    // Auto-fill form with the first detected result immediately
+    if (results.length > 0) {
+        fillForm({ email: results[0].email, pos: results[0].pos, hr: results[0].hr }, listContainer.children[0]);
+    }
 }
 
 // ==========================================
