@@ -553,7 +553,7 @@ function detectAllPositions(text) {
         found.sort((a, b) => a.idx - b.idx);
         return found.map(f => f.pos);
     }
-    return ['frontend'];
+    return [];
 }
 
 function extractNameFromEmail(email) {
@@ -609,16 +609,22 @@ function detectHRName(text, email = "") {
 }
 
 function fillForm(data, itemEl = null) {
-    document.getElementById('email').value = data.email;
-    document.getElementById('hrName').value = data.hr || 'Tim HRD';
-    selectPosition(data.pos);
-    generateEmail();
-
-    // Highlight active result item
     document.querySelectorAll('.result-item').forEach(el => el.classList.remove('active'));
     if (itemEl) {
         itemEl.classList.add('active');
     }
+
+    document.getElementById('email').value = data.email || '';
+    document.getElementById('hrName').value = data.hr || 'Tim HRD';
+
+    if (!data.pos || data.pos === 'unknown') {
+        generateEmail();
+        showToast(`Email ${data.email} terisi. Silakan pilih kartu posisi di form.`, "warning");
+        return;
+    }
+
+    selectPosition(data.pos);
+    generateEmail();
 
     showToast(`Form diisi dengan target email: ${data.email}`, "success");
 }
@@ -647,6 +653,7 @@ function detectLinkedIn() {
 
     const results = [];
     const candidates = [];
+    let unrecognizedCount = 0;
 
     sortedEmails.forEach((item, i) => {
         const classificationContext = text.substring(
@@ -660,7 +667,13 @@ function detectLinkedIn() {
             const prevEnd = i > 0 ? sortedEmails[i - 1].idx + sortedEmails[i - 1].email.length : 0;
             const context = text.substring(prevEnd, item.idx);
             const positions = detectAllPositions(context);
-            positions.forEach(pos => results.push({ email: item.email, pos, hr }));
+
+            if (positions.length > 0) {
+                positions.forEach(pos => results.push({ email: item.email, pos, hr }));
+            } else {
+                unrecognizedCount++;
+                results.push({ email: item.email, pos: 'unknown', hr });
+            }
         } else {
             candidates.push(item.email);
         }
@@ -690,6 +703,14 @@ function detectLinkedIn() {
     headerText.textContent = `Ditemukan ${results.length} potensi email lamaran:`;
     resultElement.appendChild(headerText);
 
+    if (unrecognizedCount > 0) {
+        const manualNote = document.createElement('div');
+        manualNote.style.fontWeight = '600';
+        manualNote.style.color = 'var(--warning)';
+        manualNote.textContent = `${unrecognizedCount} email tidak terdeteksi posisinya — pilih posisi manual sebelum dikirim agar tidak salah kirim.`;
+        resultElement.appendChild(manualNote);
+    }
+
     const listContainer = document.createElement('div');
     listContainer.className = 'result-list';
 
@@ -697,7 +718,8 @@ function detectLinkedIn() {
         const item = document.createElement('div');
         item.className = 'result-item' + (idx === 0 ? ' active' : '');
         
-        const posLabel = r.pos === 'frontend' ? 'Frontend' : r.pos === 'fullstack' ? 'Fullstack' : 'Golang';
+        const isUnknown = !r.pos || r.pos === 'unknown';
+        const posLabel = isUnknown ? 'Tidak terdeteksi' : (r.pos === 'frontend' ? 'Frontend' : r.pos === 'fullstack' ? 'Fullstack' : 'Golang');
         const initial = r.hr ? r.hr.charAt(0).toUpperCase() : 'HR';
 
         item.innerHTML = `
@@ -710,14 +732,15 @@ function detectLinkedIn() {
                 </div>
             </div>
             <div class="result-actions">
-                <div class="result-badge">${r.pos}</div>
+                <div class="result-badge ${isUnknown ? 'result-badge-unknown' : ''}">${isUnknown ? 'Manual' : r.pos}</div>
+                ${isUnknown ? '' : `
                 <button class="btn-send-row" title="Kirim lamaran ke ${r.email}">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px;">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                     </svg>
                     <span>Kirim</span>
-                </button>
+                </button>`}
             </div>
         `;
 
@@ -726,20 +749,33 @@ function detectLinkedIn() {
         });
 
         const sendRowBtn = item.querySelector('.btn-send-row');
-        sendRowBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            fillForm({ email: r.email, pos: r.pos, hr: r.hr }, item);
-            sendEmailDirect(r.email, r.pos, r.hr, sendRowBtn);
-        });
+        if (sendRowBtn) {
+            sendRowBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                fillForm({ email: r.email, pos: r.pos, hr: r.hr }, item);
+                sendEmailDirect(r.email, r.pos, r.hr, sendRowBtn);
+            });
+        }
 
         listContainer.appendChild(item);
     });
 
     resultElement.appendChild(listContainer);
 
-    // Auto-fill form with the first detected result immediately
-    if (results.length > 0) {
-        fillForm({ email: results[0].email, pos: results[0].pos, hr: results[0].hr }, listContainer.children[0]);
+    // Auto-fill form with the first result that has a recognizable position.
+    // If all are unknown, still populate the first email and HR so the user only needs to pick a position.
+    const firstKnown = results.find(r => r.pos && r.pos !== 'unknown');
+    if (firstKnown) {
+        const knownIdx = results.indexOf(firstKnown);
+        fillForm(
+            { email: firstKnown.email, pos: firstKnown.pos, hr: firstKnown.hr },
+            listContainer.children[knownIdx]
+        );
+    } else if (results.length > 0) {
+        fillForm(
+            { email: results[0].email, pos: 'unknown', hr: results[0].hr },
+            listContainer.children[0]
+        );
     }
 }
 
@@ -749,6 +785,11 @@ function detectLinkedIn() {
 async function sendEmailDirect(email, pos, hr, button) {
     if (!email) {
         showToast("Email tujuan tidak valid!", "warning");
+        return;
+    }
+
+    if (!pos || pos === 'unknown') {
+        showToast("Posisi tidak terdeteksi. Pilih posisi secara manual sebelum mengirim.", "warning");
         return;
     }
 

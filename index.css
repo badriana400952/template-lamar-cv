@@ -444,6 +444,12 @@ textarea {
     text-transform: uppercase;
 }
 
+.result-badge-unknown {
+    background-color: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning-border);
+}
+
 .result-actions {
     display: flex;
     align-items: center;
